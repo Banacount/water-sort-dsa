@@ -1,0 +1,19 @@
+
+/* Default elements */
+body {
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* General elements */
+#screen {
+    position: absolute;
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    border: 2px solid black;
+    border-style: inset;
+    user-select: none;
+    touch-action: none;
+}
