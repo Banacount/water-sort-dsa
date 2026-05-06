@@ -6,6 +6,7 @@ const ctx = canvas.getContext("2d");
 // Game properties
 let gravity = 150;
 let alldrops = [];
+let allglasses = [];
 let sec_time = 0;
 
 // Controls properties
@@ -17,23 +18,27 @@ let pointer_down = false;
 let p_x = 0, p_y = 0;
 let lastTime = 0;
 
-
-let test_Vec2 = new Vec2(100, 100);
-let test_drop = new dropletObj(test_Vec2, 20);
-
 // Main update method
 const update = (dt) => {
-    test_drop.update(dt);
-
     alldrops.map((drop) => {
         if (drop.dead) return;
         drop.update(dt);
         drop.velocity.y += (gravity * dt);
         
-        if (drop.position.y >= screenHeight) {
-            drop.dead = true;
-        }
+        if (drop.position.y >= screenHeight) drop.dead = true;
+
+        allglasses.map((glass) => {
+            if (glass.flowRect.collidePoint(drop.position.x, drop.position.y)){
+                drop.dead = true;
+                glass.flow += 0.20;
+            }
+        });
     });
+
+    // Filter all dead drops
+    let newDrops = [];
+    alldrops.map((drop) => { if (!drop.dead) newDrops.push(drop); });
+    alldrops = newDrops;
 
     // Time in seconds
     if (sec_time >= 1) {
@@ -59,11 +64,11 @@ const draw = (dt) => {
     ctx.fillStyle = "red";
     ctx.fillRect(mouseX, mouseY, 20, 20);
 
-    //Supposed cup
-    let test_Rect = new Rect(100, 100, 100, 250);
-    let test_glass = new GlassObj(test_Rect);
-    test_glass.draw(ctx, "#383838");
-    test_drop.draw(ctx, "red");
+    // Supposed cups
+    allglasses.map((glass) => {
+        glass.drawInWater(ctx);
+        glass.draw(ctx);
+    });
 
     // Draw all drops
     alldrops.map((drop) => {
@@ -101,7 +106,7 @@ canvas.addEventListener("pointermove", (e) => {
     mouseX = e.clientX, mouseY = e.clientY;
 });
 
-//Resize screen
+// Resize screen
 const resizeCanvas = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -111,3 +116,8 @@ const resizeCanvas = () => {
 };
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
+
+// Initializing objects
+let test_Rect = new Rect(100, 100, 100, 250);
+let test_glass = new GlassObj(test_Rect);
+allglasses.push(test_glass);
