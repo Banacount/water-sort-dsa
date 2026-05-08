@@ -1,5 +1,6 @@
 import { Vec2, dropletObj, GlassObj, Rect } from "./class.js";
 
+/** @type {HTMLCanvasElement} */
 const canvas = document.getElementById("screen");
 const ctx = canvas.getContext("2d");
 
@@ -7,7 +8,13 @@ const ctx = canvas.getContext("2d");
 let gravity = 150;
 let alldrops = [];
 let allglasses = [];
-let sec_time = 0;
+let dt_time = 0;
+let uni_time = 0;
+let color_index = 0;
+const colors = ["red", "blue", "green"];
+
+// Times ( for delays )
+let drop_delay = 0.15, drop_snap = 0;
 
 // Controls properties
 let screenWidth = 500, screenHeight = 500;
@@ -28,9 +35,9 @@ const update = (dt) => {
         if (drop.position.y >= screenHeight) drop.dead = true;
 
         allglasses.map((glass) => {
-            if (glass.flowRect.collidePoint(drop.position.x, drop.position.y)){
+            if (glass.flowRect.collidePoint(drop.position.x, drop.position.y-drop.radius)){
                 drop.dead = true;
-                glass.flow += 0.20;
+                glass.flow += 0.02;
             }
         });
     });
@@ -40,17 +47,22 @@ const update = (dt) => {
     alldrops.map((drop) => { if (!drop.dead) newDrops.push(drop); });
     alldrops = newDrops;
 
-    // Time in seconds
-    if (sec_time >= 1) {
+    // Delays in shiz
+    if (uni_time-drop_snap >= drop_delay) {
         if (pointer_down) {
             let vec2 = new Vec2(mouseX, mouseY);
-            let drop = new dropletObj(vec2, 20);
+            let drop = new dropletObj(vec2, 10, "red");
             alldrops.push(drop);
         }
+        drop_snap = uni_time;
+    }
 
-        sec_time = 0;
+    // Time in miliseconds
+    if (dt_time >= 0.01) {
+        dt_time = 0;
+        uni_time += 0.01;
     } else {
-        sec_time += dt * 1;
+        dt_time += dt * 1;
     }
 }
 
@@ -61,12 +73,12 @@ const draw = (dt) => {
     ctx.fillRect(0, 0, screenWidth, screenHeight);
 
     // Game things
-    ctx.fillStyle = "red";
+    ctx.fillStyle = colors[color_index];
     ctx.fillRect(mouseX, mouseY, 20, 20);
 
     // Supposed cups
     allglasses.map((glass) => {
-        glass.drawInWater(ctx);
+        glass.drawInWater(ctx, "red");
         glass.draw(ctx);
     });
 
@@ -104,6 +116,16 @@ canvas.addEventListener("pointerup", (e) => {
 // down
 canvas.addEventListener("pointermove", (e) => {
     mouseX = e.clientX, mouseY = e.clientY;
+});
+//key
+window.addEventListener("keyup", (e) => {
+    if (e.key == 1) {
+        color_index = 0;
+    } else if (e.key == 2) {
+        color_index = 1;
+    } else if (e.key == 3) {
+        color_index = 2;
+    }
 });
 
 // Resize screen
